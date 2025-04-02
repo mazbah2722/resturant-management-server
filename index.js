@@ -36,6 +36,9 @@ async function run() {
 
     // restaurant related apis
     const restaurantCollection =  client.db("restaurantPortal").collection("restaurants");
+    const foodOrderCollection = client.db("restaurantPortal").collection("foodOrder");
+
+
     app.get('/restaurants', async(req, res) =>{
         const cursor = restaurantCollection.find();
         const result = await cursor.toArray();
@@ -46,6 +49,34 @@ async function run() {
         const query = {_id: new ObjectId(id)}
         const result = await restaurantCollection.findOne(query);
         res.send(result);
+    });
+    // add food
+    app.post('/restaurants', async(req, res)=>{
+      const newFood = req.body;
+      const result = await restaurantCollection.insertOne(newFood);
+      res.send(result);
+
+    })
+    app.get("/myFoodOrder", async(req, res) =>{
+      const email = req.query.email;
+      const query = {applicant_email: email};
+      const result = await foodOrderCollection.find(query).toArray();
+      
+      for(const order of result){
+        console.log(order.job_id);
+        const query1 = {_id: new ObjectId(order.job_id)}
+        const purchase = await restaurantCollection.findOne(query1);
+        const od = {};
+        if(od){
+          order.foodOrigin = od.foodOrigin;
+        }
+      }
+      res.send(result);
+    })
+    app.post('/foodOrder', async(req, res) =>{
+      const order = req.body;
+      const result = await foodOrderCollection.insertOne(order);
+      res.send(result);
     })
 
   } finally {
